@@ -157,37 +157,38 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
             dynamic_string = f"Net Income is Low as per Eligibility.\n"
             remark += dynamic_string
             point_ind = point_ind + 1
-            bad_loan += 0.88
+            bad_loan += 14
             cond = True
         if cibil_eligibility == 0:
             dynamic_string = f"CIBIL Score is Low as per Eligibility (<= 700).\n"
             remark += dynamic_string
             point_ind = point_ind + 1
-            bad_loan += 0.64
+            bad_loan += 12
             cond = True
         if overdue_interest > 0 or overdue_principal > 0 or npa_val == 1:
             dynamic_string = ""
             cond = True
             if overdue_interest > 0 and overdue_principal == 0 and npa_val == 0:
                 dynString = f"Overdue Interest of ₹{overdue_interest}"
-                bad_loan += 0.64
+                bad_loan += 2
             elif overdue_interest > 0 and overdue_principal == 0 and npa_val == 1:
                 dynString = f"Overdue Interest of ₹{overdue_interest} and the Account is classified as NPA"
-                bad_loan += 0.64 + 0.79
+                bad_loan += 5 
             elif overdue_principal > 0 and overdue_interest == 0 and npa_val == 0:
                 dynString = f"Overdue Principal of ₹{overdue_principal}"
-                bad_loan += 0.64
+                bad_loan += 2
             elif overdue_principal > 0 and overdue_interest == 0 and npa_val == 1:
                 dynString = f"Overdue Principal of ₹{overdue_principal} and the Account is classified as NPA"
-                bad_loan += 0.64 + 0.79
+                bad_loan += 5
             elif overdue_principal > 0 and overdue_interest > 0 and npa_val == 0:
                 dynString = f"Overdue Principal of ₹{overdue_principal} and Overdue Interest of ₹{overdue_interest}"
-                bad_loan += 0.64 + 0.64
+                bad_loan += 5
             elif overdue_principal > 0 and overdue_interest > 0 and npa_val == 1:
                 dynString = f"Overdue Principal of ₹{overdue_principal} and Overdue Interest of ₹{overdue_interest} and the Account is classified as NPA"
-                bad_loan += 0.64 + 0.64 + 0.79
+                bad_loan += 9
             elif overdue_principal == 0 and overdue_interest == 0 and npa_val == 1:
                 dynamic_string = f"The account is classified as NPA, despite having no overdue interest and overdue principal. Manual verification and processing are required.\n"
+                bad_loan+=3
                 remark += dynamic_string
                 point_ind = point_ind + 1
             if (dynamic_string == ""):
@@ -198,17 +199,17 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
             dynamic_string = f"Previously Customer had One Time Settlement(OTS) with other/our Bank/s.\n"
             remark += dynamic_string
             point_ind = point_ind + 1
-            bad_loan += 0.5
+            bad_loan += 7
             cond = True
         if writeoff_val == True:
             dynamic_string = f"Previously Customer had a Writeoff with other/our Bank/s.\n"
             remark += dynamic_string
             point_ind = point_ind + 1
-            bad_loan += 0.5
+            bad_loan += 7
             cond = True
         if(cond==False):
             remark = "Error! in generating Remarks for the Customer."
-        bad_loan_per = (bad_loan / 4.47) * 100
+        bad_loan_per = (bad_loan / 50) * 100
         st.markdown(
             """
             <p style='font-weight: bold; color: #de2858; font-size: 29px;'>Risk Assessment:</p>
@@ -245,6 +246,46 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
             dynamic_string = f"Previously Customer had a Writeoff with other/our Bank/s.\n"
             remark += dynamic_string
             point_ind = point_ind + 1
+        if(prediction == 1):
+            if(current_cibil_score >= 700 and current_cibil_score < 721):
+                bad_loan+= 2
+            if(current_cibil_score >= 721 and current_cibil_score < 800):
+                bad_loan+= 1
+            if(max_emi < 2500):
+                bad_loan+=1
+            if(max_emi > 2500 and max_emi <5000):
+                bad_loan+=0.5
+            if(net_salary/total_disbursed_amount < 0.33 and net_salary/total_disbursed_amount > 0.2):
+                bad_loan+=0.5
+            if(net_salary/total_disbursed_amount < 0.2):
+                bad_loan+=1
+            if(writeoff_val==True):
+                bad_loan+=5
+            if(ots_val==True):
+                bad_loan+=5
+            if(npa_val==1):
+                bad_loan+=3
+            bad_loan_per = (bad_loan / 17) * 100
+            st.markdown(
+                """
+                <p style='font-weight: bold; color: #de2858; font-size: 29px;'>Risk Assessment:</p>
+                """,
+                unsafe_allow_html=True
+            )
+            st.success(f"Probability of Bad Loan: {bad_loan_per:.2f}%")
+
+            # Display pie chart
+            fig, ax = plt.subplots()
+            labels = ['Risk', 'Safe']
+            sizes = [bad_loan_per, 100 - bad_loan_per]
+            colors = ['#FF6347', '#4CAF50']
+            explode = (0.1, 0)
+            textprops = {'color': '#1c1a18', 'fontsize': 12, 'weight': 'bold'}
+            ax.pie(sizes, labels=labels, autopct='%1.1f%%',
+                startangle=90, colors=colors, explode=explode, textprops=textprops)
+            # Equal aspect ratio ensures that pie is drawn as a circle.
+            ax.axis('equal')
+            st.pyplot(fig)
     # Display the percentage graph for bad_loan_per
     # st.subheader("Risk Assessment:")
     # st.subheader("Risk Assessment:")
