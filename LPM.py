@@ -162,6 +162,7 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
             point_ind = point_ind + 1
             bad_loan += 0.64
         if overdue_interest > 0 or overdue_principal > 0 or npa_val == 1:
+            dynamic_string = ""
             if overdue_interest > 0 and overdue_principal == 0 and npa_val == 0:
                 dynString = f"Overdue Interest of ₹{overdue_interest}"
                 bad_loan += 0.64
@@ -181,10 +182,13 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
                 dynString = f"Overdue Principal of ₹{overdue_principal} and Overdue Interest of ₹{overdue_interest} and the Account is classified as NPA"
                 bad_loan += 0.64 + 0.64 + 0.79
             elif overdue_principal == 0 and overdue_interest == 0 and npa_val == 1:
-                dynString = f"no Overdue Interest and Overdue Principal but the Account is classified as NPA.Account needs to be manually checked and processed"
-            dynamic_string = f"Customer has {dynString}.\n"
-            remark += dynamic_string
-            point_ind = point_ind + 1
+                dynamic_string = f"The account is classified as NPA, despite having no overdue interest and overdue principal. Manual verification and processing are required."
+                remark += dynamic_string
+                point_ind = point_ind + 1
+            if (dynamic_string == ""):
+                dynamic_string = f"Customer has {dynString}.\n"
+                remark += dynamic_string
+                point_ind = point_ind + 1
         if ots_val == True:
             dynamic_string = f"Previously Customer had One Time Settlement(OTS) with other/our Bank/s.\n"
             remark += dynamic_string
