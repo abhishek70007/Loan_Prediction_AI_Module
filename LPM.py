@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # Load the background image
 background_image = "websitebg.jpg"
 
@@ -148,7 +149,7 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
     remark = ""
     point_ind = 1
     bad_loan = 0
-
+    dynString=""
     if prediction == 0:
         if income_eligibility == 0:
             dynamic_string = f"Net Income is Low as per Eligibility.\n"
