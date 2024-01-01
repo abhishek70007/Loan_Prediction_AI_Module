@@ -149,7 +149,7 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
     remark = ""
     point_ind = 1
     bad_loan = 0
-    dynString=""
+    dynString = ""
     if prediction == 0:
         if income_eligibility == 0:
             dynamic_string = f"Net Income is Low as per Eligibility.\n"
@@ -180,6 +180,8 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
             elif overdue_principal > 0 and overdue_interest > 0 and npa_val == 1:
                 dynString = f"Overdue Principal of ₹{overdue_principal} and Overdue Interest of ₹{overdue_interest} and the Account is classified as NPA"
                 bad_loan += 0.64 + 0.64 + 0.79
+            elif overdue_principal == 0 and overdue_interest == 0 and npa_val == 1:
+                dynString = f"no Overdue Interest and Overdue Principal but the Account is classified as NPA.Account needs to be manually checked and processed"
             dynamic_string = f"Customer has {dynString}.\n"
             remark += dynamic_string
             point_ind = point_ind + 1
