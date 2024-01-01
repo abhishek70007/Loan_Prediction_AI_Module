@@ -182,7 +182,7 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
                 dynString = f"Overdue Principal of ₹{overdue_principal} and Overdue Interest of ₹{overdue_interest} and the Account is classified as NPA"
                 bad_loan += 0.64 + 0.64 + 0.79
             elif overdue_principal == 0 and overdue_interest == 0 and npa_val == 1:
-                dynamic_string = f"The account is classified as NPA, despite having no overdue interest and overdue principal. Manual verification and processing are required."
+                dynamic_string = f"The account is classified as NPA, despite having no overdue interest and overdue principal. Manual verification and processing are required.\n"
                 remark += dynamic_string
                 point_ind = point_ind + 1
             if (dynamic_string == ""):
