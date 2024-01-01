@@ -107,7 +107,7 @@ take_home = 0.30 * net_salary
 
 # Calculate CIBIL Eligibility
 cibil_eligibility = 1 if current_cibil_score >= 700 else 0
-income_eligibility = 1 if (net_salary - total_emi_amount) >= take_home else 0
+income_eligibility = 1 if ((net_salary - total_emi_amount) >= take_home)and(net_salary>0) else 0
 
 if npa_classification == "Standard":
     npa_val = 0
@@ -150,19 +150,24 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
     point_ind = 1
     bad_loan = 0
     dynString = ""
+    max_emi=0
+    cond = False
     if prediction == 0:
         if income_eligibility == 0:
             dynamic_string = f"Net Income is Low as per Eligibility.\n"
             remark += dynamic_string
             point_ind = point_ind + 1
             bad_loan += 0.88
+            cond = True
         if cibil_eligibility == 0:
             dynamic_string = f"CIBIL Score is Low as per Eligibility (<= 700).\n"
             remark += dynamic_string
             point_ind = point_ind + 1
             bad_loan += 0.64
+            cond = True
         if overdue_interest > 0 or overdue_principal > 0 or npa_val == 1:
             dynamic_string = ""
+            cond = True
             if overdue_interest > 0 and overdue_principal == 0 and npa_val == 0:
                 dynString = f"Overdue Interest of ₹{overdue_interest}"
                 bad_loan += 0.64
@@ -182,7 +187,7 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
                 dynString = f"Overdue Principal of ₹{overdue_principal} and Overdue Interest of ₹{overdue_interest} and the Account is classified as NPA"
                 bad_loan += 0.64 + 0.64 + 0.79
             elif overdue_principal == 0 and overdue_interest == 0 and npa_val == 1:
-                dynamic_string = f"The account is classified as NPA, despite having no Overdue Interest and Overdue Principal. Manual verification and processing are required.\n"
+                dynamic_string = f"The account is classified as NPA, despite having no overdue interest and overdue principal. Manual verification and processing are required.\n"
                 remark += dynamic_string
                 point_ind = point_ind + 1
             if (dynamic_string == ""):
@@ -194,41 +199,60 @@ if st.button('Predict Loan Approval', key='predict_button', help="Click to predi
             remark += dynamic_string
             point_ind = point_ind + 1
             bad_loan += 0.5
+            cond = True
         if writeoff_val == True:
             dynamic_string = f"Previously Customer had a Writeoff with other/our Bank/s.\n"
             remark += dynamic_string
             point_ind = point_ind + 1
             bad_loan += 0.5
-        else:
+            cond = True
+        if(cond==False):
             remark = "Error! in generating Remarks for the Customer."
         bad_loan_per = (bad_loan / 4.47) * 100
+        st.markdown(
+            """
+            <p style='font-weight: bold; color: #de2858; font-size: 29px;'>Risk Assessment:</p>
+            """,
+            unsafe_allow_html=True
+        )
+        st.success(f"Probability of Bad Loan: {bad_loan_per:.2f}%")
 
+        # Display pie chart
+        fig, ax = plt.subplots()
+        labels = ['Risk', 'Safe']
+        sizes = [bad_loan_per, 100 - bad_loan_per]
+        colors = ['#FF6347', '#4CAF50']
+        explode = (0.1, 0)
+        textprops = {'color': '#1c1a18', 'fontsize': 12, 'weight': 'bold'}
+        ax.pie(sizes, labels=labels, autopct='%1.1f%%',
+            startangle=90, colors=colors, explode=explode, textprops=textprops)
+        # Equal aspect ratio ensures that pie is drawn as a circle.
+        ax.axis('equal')
+        st.pyplot(fig)
+    
+    else:
+        max_emi = (net_salary - total_emi_amount) - take_home
+        dynamic_string = f"The Customer can take a loan for which the monthly EMI is less than or equal to ₹{max_emi}.\n"
+        remark += dynamic_string
+        point_ind = point_ind + 1
+        if current_cibil_score >= 700 and current_cibil_score <= 720:
+            dynamic_string = f"The Customer has CIBIL Score [${current_cibil_score}] near to the eligible score i.e 700.\n"
+        if ots_val == True:
+            dynamic_string = f"Previously Customer had One Time Settlement(OTS) with other/our Bank/s.\n"
+            remark += dynamic_string
+            point_ind = point_ind + 1
+        if writeoff_val == True:
+            dynamic_string = f"Previously Customer had a Writeoff with other/our Bank/s.\n"
+            remark += dynamic_string
+            point_ind = point_ind + 1
     # Display the percentage graph for bad_loan_per
     # st.subheader("Risk Assessment:")
     # st.subheader("Risk Assessment:")
-    st.markdown(
-        """
-        <p style='font-weight: bold; color: #de2858; font-size: 29px;'>Risk Assessment:</p>
-        """,
-        unsafe_allow_html=True
-    )
-    st.success(f"Probability of Bad Loan: {bad_loan_per:.2f}%")
-
-    # Display pie chart
-    fig, ax = plt.subplots()
-    labels = ['Risk', 'Safe']
-    sizes = [bad_loan_per, 100 - bad_loan_per]
-    colors = ['#FF6347', '#4CAF50']
-    explode = (0.1, 0)
-    textprops = {'color': '#1c1a18', 'fontsize': 12, 'weight': 'bold'}
-    ax.pie(sizes, labels=labels, autopct='%1.1f%%',
-           startangle=90, colors=colors, explode=explode, textprops=textprops)
-    # Equal aspect ratio ensures that pie is drawn as a circle.
-    ax.axis('equal')
-    st.pyplot(fig)
+    
 
     # Display remarks
     # st.subheader("Remarks:")
+    
     st.markdown(
         """
         <p style='font-weight: bold; color: #43fa96; font-size: 29px;'>Remark:</p>
